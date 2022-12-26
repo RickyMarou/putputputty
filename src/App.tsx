@@ -12,16 +12,6 @@ function App() {
           <OrbitControls />
           <gridHelper />
           <axesHelper />
-          <Box
-            position={[1, 1, 1]}
-            geometry={{
-              applyMatrix4: () => {
-                new Matrix4(1, 1, 1, 1);
-              },
-            }}
-          >
-            <meshBasicMaterial color="darkgray" />
-          </Box>
           <Sphere position={[0, 1, 0]}>
             <meshBasicMaterial color="hotpink" />
           </Sphere>
