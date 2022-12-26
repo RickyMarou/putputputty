@@ -1,0 +1,31 @@
+@font-face {
+  font-family: "ShrikhandRegular";
+  src: url("assets/fonts/ShrikhandRegular.eot");
+  src: url("assets/fonts/ShrikhandRegular.eot") format("embedded-opentype"),
+    url("assets/fonts/ShrikhandRegular.woff2") format("woff2"),
+    url("assets/fonts/ShrikhandRegular.woff") format("woff"),
+    url("assets/fonts/ShrikhandRegular.ttf") format("truetype"),
+    url("assets/fonts/ShrikhandRegular.svg#ShrikhandRegular") format("svg");
+}
+
+body {
+  background-color: papayawhip;
+}
+
+h1 {
+  font-family: "ShrikhandRegular";
+  color: hotpink;
+  font-size: 8em;
+  text-align: center;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.canvas-container {
+  flex: 1;
+  border: 5px solid #fff;
+}
