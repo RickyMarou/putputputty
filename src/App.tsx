@@ -74,6 +74,10 @@ function DrawLine() {
 }
 
 function PointerTracker({ children }) {
+  // TODO: Instead of wrapping in a mesh
+  // Use an invisible element and make sure that it
+  // is double sided, that can be done by setting
+  // the `side` property on the material
   return (
     <mesh
       onPointerDown={(e) => {
