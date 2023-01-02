@@ -1,4 +1,5 @@
 import "./App.css";
+import { atom, useSetAtom, useAtom, useAtomValue } from "jotai";
 import React, { useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Physics, useSphere, usePlane, useBox } from "@react-three/cannon";
@@ -7,17 +8,26 @@ import {
   Box,
   SpotLight,
   OrbitControls,
+  MapControls,
   OrthographicCamera,
   useDepthBuffer,
   Plane,
   Line,
 } from "@react-three/drei";
 
+const ballAtom = atom(undefined);
+const lineStartAtom = atom(undefined);
+const lineEndAtom = atom(undefined);
+const mousePointsAtom = atom([]);
+
 function Ball(props: any) {
   const [ref, api] = useSphere(() => ({
     mass: 1,
     linearDamping: 0.5,
   }));
+
+  const setBall = useSetAtom(ballAtom);
+  setBall(ref);
 
   return (
     <Sphere
@@ -45,14 +55,18 @@ function GamePlane() {
 }
 
 function DrawLine() {
+  const lineStart = useAtomValue(lineStartAtom);
+  const lineEnd = useAtomValue(lineEndAtom);
+
+  if (!lineStart || !lineEnd) {
+    return null;
+  }
+
   return (
     <>
       <Line
-        position={[1, 0, 1]}
-        points={[
-          [1, 1, 0],
-          [1, 1, 1],
-        ]}
+        position={[0, 0, 1]}
+        points={[lineStart, lineEnd]}
         lineWidth={10}
         color="red"
       />
@@ -61,17 +75,36 @@ function DrawLine() {
 }
 
 function PointerTracker({ children }) {
-  // TODO: Instead of wrapping in a mesh
-  // Use an invisible element and make sure that it
-  // is double sided, that can be done by setting
-  // the `side` property on the material
+  const ball = useAtomValue(ballAtom);
+  const setLineStart = useSetAtom(lineStartAtom);
+  const setLineEnd = useSetAtom(lineEndAtom);
+  const [mousePoints, setMousePoints] = useAtom(mousePointsAtom);
+
   return (
     <mesh
       onPointerDown={(e) => {
         console.log("down", e);
+        console.log({ ball });
+        const intersecting = e.intersections.some(
+          (intersection) => intersection.object === ball.current
+        );
+
+        if (!intersecting) {
+          console.log("not intersecting");
+          return;
+        }
+
+        setLineStart([ball.current.position.x, 1, ball.current.position.z]);
+        setLineEnd([e.point.x, 1, e.point.z]);
+        console.log("intersecting");
+      }}
+      onPointerMove={(e) => {
+        setLineEnd([e.point.x, 1, e.point.z]);
+        // setMousePoints([...mousePoints, [e.point.x, e.point.y, 1]]);
       }}
       onPointerUp={(e) => {
-        console.log("up", e);
+        setLineStart(undefined);
+        setLineEnd(undefined);
       }}
     >
       {children}
@@ -92,12 +125,11 @@ function Wall({ args = [0.2, 2, 10], color, ...props }) {
 function BaseScene(props: any) {
   return (
     <>
-      <OrbitControls />
+      <MapControls />
       <OrthographicCamera position={[0, 10, 0]} zoom={40} makeDefault />
       <ambientLight intensity={0.3} />
       <pointLight position={[10, 10, 5]} />
       <pointLight position={[-10, -10, -5]} />
-      <axesHelper />
     </>
   );
 }
