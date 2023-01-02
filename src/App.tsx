@@ -7,6 +7,7 @@ import {
   Box,
   SpotLight,
   OrbitControls,
+  OrthographicCamera,
   useDepthBuffer,
   Plane,
   Line,
@@ -46,18 +47,6 @@ function GamePlane() {
 function DrawLine() {
   return (
     <>
-      <mesh
-        onPointerDown={(event) => {
-          console.log("down", { event });
-        }}
-        onPointerUp={(event) => {
-          console.log("up", { event });
-        }}
-        position={[0, 2.5, 0]}
-      >
-        <boxGeometry args={[10, 5, 10]} />
-        <meshPhongMaterial color="#ff0000" opacity={0.5} transparent />
-      </mesh>
       <Line
         position={[1, 0, 1]}
         points={[
@@ -90,7 +79,7 @@ function PointerTracker({ children }) {
   );
 }
 
-function Wall({ args = [3, 4, 0.2], color, ...props }) {
+function Wall({ args = [0.2, 2, 10], color, ...props }) {
   const [ref] = useBox(() => ({ args, ...props }));
   return (
     <mesh ref={ref}>
@@ -104,6 +93,7 @@ function BaseScene(props: any) {
   return (
     <>
       <OrbitControls />
+      <OrthographicCamera position={[0, 10, 0]} zoom={40} makeDefault />
       <ambientLight intensity={0.3} />
       <pointLight position={[10, 10, 5]} />
       <pointLight position={[-10, -10, -5]} />
@@ -123,7 +113,8 @@ function App() {
             <PointerTracker>
               <DrawLine />
               <Ball />
-              <Wall color="hotpink" position={[-1, 2, 4]} />
+              <Wall color="hotpink" position={[-2, 1, 0]} />
+              <Wall color="hotpink" position={[2, 1, 0]} />
               <GamePlane />
             </PointerTracker>
           </Physics>
