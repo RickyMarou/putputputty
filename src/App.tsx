@@ -18,8 +18,6 @@ function Ball(props: any) {
     linearDamping: 0.5,
   }));
 
-  const [linePositions, setLinePositions] = useAtom(linePositionsAtom);
-
   return (
     <Sphere
       ref={ref}
