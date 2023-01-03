@@ -1,9 +1,10 @@
 import "./App.css";
 import { atom, useSetAtom, useAtom, useAtomValue } from "jotai";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Physics, useSphere, usePlane, useBox } from "@react-three/cannon";
 import {
+  Center,
   Sphere,
   Box,
   SpotLight,
@@ -27,7 +28,11 @@ function Ball(props: any) {
   }));
 
   const setBall = useSetAtom(ballAtom);
-  setBall(ref);
+
+  useEffect(() => {
+    console.log("setting ref");
+    setBall(ref);
+  }, [ref.current]);
 
   return (
     <Sphere
@@ -84,7 +89,7 @@ function PointerTracker({ children }) {
     <mesh
       onPointerDown={(e) => {
         console.log("down", e);
-        console.log({ ball });
+        console.log({ ball: ball.current });
         const intersecting = e.intersections.some(
           (intersection) => intersection.object === ball.current
         );
