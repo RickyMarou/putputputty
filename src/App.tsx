@@ -23,7 +23,7 @@ const ballAtom = atom(undefined);
 const ballPosAtom = atom([0, 0, 0]);
 const lineStartAtom = atom(undefined);
 const lineEndAtom = atom(undefined);
-const mousePointsAtom = atom([]);
+const shootAtom = atom([0, 0, 0]);
 
 function Ball(props: any) {
   const [ref, api] = useSphere(() => ({
@@ -33,6 +33,12 @@ function Ball(props: any) {
 
   const setBall = useSetAtom(ballAtom);
   const setBallPos = useSetAtom(ballPosAtom);
+  const [shoot, setShoot] = useAtom(shootAtom);
+
+  useEffect(() => {
+    console.log({ ...shoot });
+    api.velocity.set(shoot[0], shoot[1], shoot[2]);
+  }, shoot);
 
   useEffect(() => {
     setBall(ref);
@@ -40,14 +46,7 @@ function Ball(props: any) {
   }, []);
 
   return (
-    <Sphere
-      ref={ref}
-      onClick={() => {
-        api.velocity.set(0, 0, 5);
-      }}
-      position={[0, 1, 0]}
-      {...props}
-    >
+    <Sphere ref={ref} position={[0, 1, 0]} {...props}>
       <meshPhongMaterial color="hotpink" opacity={0.5} transparent />
     </Sphere>
   );
@@ -87,9 +86,9 @@ function DrawLine() {
 function PointerTracker({ children }) {
   const ball = useAtomValue(ballAtom);
   const ballPos = useAtomValue(ballPosAtom);
-  const setLineStart = useSetAtom(lineStartAtom);
-  const setLineEnd = useSetAtom(lineEndAtom);
-  const [mousePoints, setMousePoints] = useAtom(mousePointsAtom);
+  const [lineStart, setLineStart] = useAtom(lineStartAtom);
+  const [lineEnd, setLineEnd] = useAtom(lineEndAtom);
+  const setShoot = useSetAtom(shootAtom);
 
   return (
     <mesh
@@ -103,16 +102,17 @@ function PointerTracker({ children }) {
           return;
         }
 
-        console.log("ballPos", ballPos);
-        console.log("event point", e.point);
         setLineStart([ballPos[0], 1, ballPos[2]]);
         setLineEnd([e.point.x, 1, e.point.z]);
-        console.log("intersecting");
       }}
       onPointerMove={(e) => {
         setLineEnd([e.point.x, 1, e.point.z]);
       }}
       onPointerUp={(e) => {
+        if (lineStart && lineEnd) {
+          setShoot([lineStart[0] - lineEnd[0], 1, lineStart[2] - lineEnd[2]]);
+        }
+
         setLineStart(undefined);
         setLineEnd(undefined);
       }}
@@ -133,21 +133,24 @@ function Wall({ args = [0.2, 2, 10], color, ...props }) {
 }
 
 function BaseScene(props: any) {
-  let currentPosition = new THREE.Vector3();
+  const ballPos = useAtomValue(ballPosAtom);
   let currentLookAt = new THREE.Vector3();
 
-  const ballPos = useAtomValue(ballPosAtom);
-
-  useFrame((state, delta) => {
+  useFrame((state) => {
     currentLookAt.set(ballPos[0], ballPos[1], ballPos[2]);
     state.camera.lookAt(currentLookAt);
+    state.camera.position.set(0, 15, ballPos[2] - 15);
     state.camera.updateProjectionMatrix();
   });
 
   return (
     <>
       <MapControls />
-      <PerspectiveCamera makeDefault position={[0, 15, ballPos[2] - 15]} />
+      <PerspectiveCamera
+        makeDefault
+        position={[0, 15, ballPos[2] - 15]}
+        onPointerDown={undefined}
+      ></PerspectiveCamera>
       <ambientLight intensity={0.3} />
       <pointLight position={[10, 10, 5]} />
       <pointLight position={[-10, -10, -5]} />
