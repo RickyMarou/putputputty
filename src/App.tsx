@@ -53,7 +53,7 @@ function GamePlane() {
   const position = [0, 0, 0];
   const [ref] = usePlane(() => ({ rotation, position }));
   return (
-    <Plane scale={10} rotation={rotation} ref={ref} position={position}>
+    <Plane scale={80} rotation={rotation} ref={ref} position={position}>
       <meshPhongMaterial />
     </Plane>
   );
@@ -88,8 +88,6 @@ function PointerTracker({ children }) {
   return (
     <mesh
       onPointerDown={(e) => {
-        console.log("down", e);
-        console.log({ ball: ball.current });
         const intersecting = e.intersections.some(
           (intersection) => intersection.object === ball.current
         );
@@ -99,13 +97,13 @@ function PointerTracker({ children }) {
           return;
         }
 
-        setLineStart([ball.current.position.x, 1, ball.current.position.z]);
+        setLineStart([e.point.x, 1, e.point.z]);
         setLineEnd([e.point.x, 1, e.point.z]);
         console.log("intersecting");
       }}
       onPointerMove={(e) => {
+        console.log("pointer move", e.point);
         setLineEnd([e.point.x, 1, e.point.z]);
-        // setMousePoints([...mousePoints, [e.point.x, e.point.y, 1]]);
       }}
       onPointerUp={(e) => {
         setLineStart(undefined);
@@ -145,16 +143,16 @@ function App() {
       <h1>PutPutPutty</h1>
       <div className="canvas-container">
         <Canvas>
-          <BaseScene />
-          <Physics>
-            <PointerTracker>
+          <PointerTracker>
+            <BaseScene />
+            <Physics>
               <DrawLine />
               <Ball />
               <Wall color="hotpink" position={[-2, 1, 0]} />
               <Wall color="hotpink" position={[2, 1, 0]} />
               <GamePlane />
-            </PointerTracker>
-          </Physics>
+            </Physics>
+          </PointerTracker>
         </Canvas>
       </div>
     </main>
