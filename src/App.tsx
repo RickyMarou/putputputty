@@ -11,12 +11,16 @@ import {
   OrbitControls,
   MapControls,
   OrthographicCamera,
+  PerspectiveCamera,
+  PointerLockControls,
   useDepthBuffer,
   Plane,
   Line,
 } from "@react-three/drei";
+import * as THREE from "three";
 
 const ballAtom = atom(undefined);
+const ballPosAtom = atom([0, 0, 0]);
 const lineStartAtom = atom(undefined);
 const lineEndAtom = atom(undefined);
 const mousePointsAtom = atom([]);
@@ -28,11 +32,12 @@ function Ball(props: any) {
   }));
 
   const setBall = useSetAtom(ballAtom);
+  const setBallPos = useSetAtom(ballPosAtom);
 
   useEffect(() => {
-    console.log("setting ref");
     setBall(ref);
-  }, [ref.current]);
+    api.position.subscribe((position) => setBallPos(position));
+  }, []);
 
   return (
     <Sphere
@@ -43,7 +48,7 @@ function Ball(props: any) {
       position={[0, 1, 0]}
       {...props}
     >
-      <meshBasicMaterial color={"hotpink"} />
+      <meshPhongMaterial color="hotpink" opacity={0.5} transparent />
     </Sphere>
   );
 }
@@ -81,6 +86,7 @@ function DrawLine() {
 
 function PointerTracker({ children }) {
   const ball = useAtomValue(ballAtom);
+  const ballPos = useAtomValue(ballPosAtom);
   const setLineStart = useSetAtom(lineStartAtom);
   const setLineEnd = useSetAtom(lineEndAtom);
   const [mousePoints, setMousePoints] = useAtom(mousePointsAtom);
@@ -97,12 +103,13 @@ function PointerTracker({ children }) {
           return;
         }
 
-        setLineStart([e.point.x, 1, e.point.z]);
+        console.log("ballPos", ballPos);
+        console.log("event point", e.point);
+        setLineStart([ballPos[0], 1, ballPos[2]]);
         setLineEnd([e.point.x, 1, e.point.z]);
         console.log("intersecting");
       }}
       onPointerMove={(e) => {
-        console.log("pointer move", e.point);
         setLineEnd([e.point.x, 1, e.point.z]);
       }}
       onPointerUp={(e) => {
@@ -126,10 +133,21 @@ function Wall({ args = [0.2, 2, 10], color, ...props }) {
 }
 
 function BaseScene(props: any) {
+  let currentPosition = new THREE.Vector3();
+  let currentLookAt = new THREE.Vector3();
+
+  const ballPos = useAtomValue(ballPosAtom);
+
+  useFrame((state, delta) => {
+    currentLookAt.set(ballPos[0], ballPos[1], ballPos[2]);
+    state.camera.lookAt(currentLookAt);
+    state.camera.updateProjectionMatrix();
+  });
+
   return (
     <>
       <MapControls />
-      <OrthographicCamera position={[0, 10, 0]} zoom={40} makeDefault />
+      <PerspectiveCamera makeDefault position={[0, 15, ballPos[2] - 15]} />
       <ambientLight intensity={0.3} />
       <pointLight position={[10, 10, 5]} />
       <pointLight position={[-10, -10, -5]} />
