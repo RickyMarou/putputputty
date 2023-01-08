@@ -49,6 +49,7 @@ function Ball(props: any) {
   useEffect(() => {
     setBall(ref);
     api.position.subscribe((position) => setBallPos(position));
+    console.log(ref.current);
   }, []);
 
   return (
@@ -81,13 +82,21 @@ function GamePlane() {
 
 function DrawLine() {
   const [lineStart, setLineStart] = useAtom(lineStartAtom);
+  const [lineEnd, setLineEnd] = useAtom(lineEndAtom);
   const ballPos = useAtomValue(ballPosAtom);
-  const lineEnd = useAtomValue(lineEndAtom);
 
-  useFrame(() => {
+  useFrame((state) => {
     if (lineStart) {
-      setLineStart([ballPos[0], 1, ballPos[2]]);
+      setLineStart([ballPos[0], 1, ballPos[2] - 1]);
     }
+
+    // TODO: state.pointer.y is between [-1 and 1]
+    // We have to instead get the y position
+    // somehow.
+    // console.log("pointer", state.pointer);
+    // if (lineEnd) {
+    //   setLineEnd([state.pointer.x, 1, state.pointer.y]);
+    // }
   });
 
   if (!lineStart || !lineEnd) {
@@ -126,19 +135,17 @@ function PointerTracker({ children }) {
         );
 
         if (!intersecting) {
-          console.log("not intersecting");
           return;
         }
 
         document.body.classList.add("grabbing");
-        setLineStart([ballPos[0], 1, ballPos[2]]);
+        setLineStart([ballPos[0], 1, ballPos[2] - 1]);
         setLineEnd([e.point.x, 1, e.point.z]);
       }}
       onPointerMove={(e) => {
         setLineEnd([e.point.x, 1, e.point.z]);
       }}
       onPointerUp={(e) => {
-        console.log("pointer up");
         document.body.classList.remove("grabbing");
         if (lineStart && lineEnd) {
           setShoot([lineStart[0] - lineEnd[0], 1, lineStart[2] - lineEnd[2]]);
@@ -167,9 +174,9 @@ function BaseScene(props: any) {
   const ballPos = useAtomValue(ballPosAtom);
 
   useFrame((state) => {
-    // TODO: Set rotation once, not on every frame.
-    state.camera.rotation.set(deg2rad(-90), 0, deg2rad(-180), "XYZ");
-    state.camera.position.set(ballPos[0], 30, ballPos[2]);
+    // TODO: Set camera rotation once, not on every frame.
+    state.camera.rotation.set(deg2rad(-80), deg2rad(0), deg2rad(0), "XYZ");
+    state.camera.position.set(ballPos[0], 30, ballPos[2] + 10);
     state.camera.updateProjectionMatrix();
   });
 
