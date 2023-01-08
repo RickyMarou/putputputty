@@ -25,6 +25,8 @@ const lineStartAtom = atom(undefined);
 const lineEndAtom = atom(undefined);
 const shootAtom = atom([0, 0, 0]);
 
+const SHOOT_MULTIPLIER = 2.4;
+
 function Ball(props: any) {
   const [ref, api] = useSphere(() => ({
     mass: 1,
@@ -33,11 +35,15 @@ function Ball(props: any) {
 
   const setBall = useSetAtom(ballAtom);
   const setBallPos = useSetAtom(ballPosAtom);
-  const [shoot, setShoot] = useAtom(shootAtom);
+  const shoot = useAtomValue(shootAtom);
 
   useEffect(() => {
     console.log({ ...shoot });
-    api.velocity.set(shoot[0], shoot[1], shoot[2]);
+    api.velocity.set(
+      shoot[0] * SHOOT_MULTIPLIER,
+      shoot[1] * SHOOT_MULTIPLIER,
+      shoot[2] * SHOOT_MULTIPLIER
+    );
   }, shoot);
 
   useEffect(() => {
@@ -46,7 +52,17 @@ function Ball(props: any) {
   }, []);
 
   return (
-    <Sphere ref={ref} position={[0, 1, 0]} {...props}>
+    <Sphere
+      onPointerOver={() => {
+        document.body.classList.add("can-grab");
+      }}
+      onPointerLeave={() => {
+        document.body.classList.remove("can-grab");
+      }}
+      ref={ref}
+      position={[0, 1, 0]}
+      {...props}
+    >
       <meshPhongMaterial color="hotpink" opacity={0.5} transparent />
     </Sphere>
   );
@@ -109,6 +125,7 @@ function PointerTracker({ children }) {
           return;
         }
 
+        document.body.classList.add("grabbing");
         setLineStart([ballPos[0], 1, ballPos[2]]);
         setLineEnd([e.point.x, 1, e.point.z]);
       }}
@@ -116,6 +133,8 @@ function PointerTracker({ children }) {
         setLineEnd([e.point.x, 1, e.point.z]);
       }}
       onPointerUp={(e) => {
+        console.log("pointer up");
+        document.body.classList.remove("grabbing");
         if (lineStart && lineEnd) {
           setShoot([lineStart[0] - lineEnd[0], 1, lineStart[2] - lineEnd[2]]);
         }

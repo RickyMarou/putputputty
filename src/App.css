@@ -12,6 +12,14 @@ body {
   background-color: papayawhip;
 }
 
+.can-grab {
+  cursor: grab;
+}
+
+.grabbing {
+  cursor: grabbing;
+}
+
 h1 {
   font-family: "ShrikhandRegular";
   color: hotpink;
