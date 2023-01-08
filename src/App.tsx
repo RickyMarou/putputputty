@@ -116,6 +116,11 @@ function PointerTracker({ children }) {
   return (
     <mesh
       onPointerDown={(e) => {
+        if (!ball) {
+          console.error("no ball ref found T_T");
+          return;
+        }
+
         const intersecting = e.intersections.some(
           (intersection) => intersection.object === ball.current
         );
@@ -160,12 +165,11 @@ function Wall({ args = [0.2, 2, 10], color, ...props }) {
 
 function BaseScene(props: any) {
   const ballPos = useAtomValue(ballPosAtom);
-  let currentLookAt = new THREE.Vector3();
 
   useFrame((state) => {
-    currentLookAt.set(ballPos[0], ballPos[1], ballPos[2]);
-    state.camera.lookAt(currentLookAt);
-    state.camera.position.set(0, 15, ballPos[2] - 15);
+    // TODO: Set rotation once, not on every frame.
+    state.camera.rotation.set(deg2rad(-90), 0, deg2rad(-180), "XYZ");
+    state.camera.position.set(ballPos[0], 30, ballPos[2]);
     state.camera.updateProjectionMatrix();
   });
 
@@ -173,7 +177,7 @@ function BaseScene(props: any) {
     <>
       <PerspectiveCamera
         makeDefault
-        position={[0, 15, ballPos[2] - 15]}
+        position={[0, 30, ballPos[2]]}
         onPointerDown={undefined}
       ></PerspectiveCamera>
       <ambientLight intensity={0.3} />
@@ -206,3 +210,7 @@ function App() {
 }
 
 export default App;
+
+function deg2rad(degrees: number) {
+  return degrees * (Math.PI / 180);
+}
