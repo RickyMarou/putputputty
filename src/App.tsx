@@ -64,8 +64,15 @@ function GamePlane() {
 }
 
 function DrawLine() {
-  const lineStart = useAtomValue(lineStartAtom);
+  const [lineStart, setLineStart] = useAtom(lineStartAtom);
+  const ballPos = useAtomValue(ballPosAtom);
   const lineEnd = useAtomValue(lineEndAtom);
+
+  useFrame(() => {
+    if (lineStart) {
+      setLineStart([ballPos[0], 1, ballPos[2]]);
+    }
+  });
 
   if (!lineStart || !lineEnd) {
     return null;
@@ -145,7 +152,6 @@ function BaseScene(props: any) {
 
   return (
     <>
-      <MapControls />
       <PerspectiveCamera
         makeDefault
         position={[0, 15, ballPos[2] - 15]}
