@@ -1,7 +1,8 @@
 import "./App.css";
 import { atom, useSetAtom, useAtom, useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { SVGLoader } from "three-stdlib";
 import { Physics, useSphere, usePlane, useBox } from "@react-three/cannon";
 import {
   Center,
@@ -26,6 +27,52 @@ const lineEndAtom = atom(undefined);
 const shootAtom = atom([0, 0, 0]);
 
 const SHOOT_MULTIPLIER = 2.4;
+
+const Cell = ({ color, shape, fillOpacity }) => (
+  <mesh>
+    <meshBasicMaterial
+      color={color}
+      opacity={fillOpacity}
+      depthWrite={false}
+      transparent
+    />
+    <shapeGeometry args={[shape]} />
+  </mesh>
+);
+
+function Svg() {
+  const [center, setCenter] = React.useState(() => new THREE.Vector3(0, 0, 0));
+  const ref = React.useRef<THREE.Group>(null!);
+
+  const { paths } = useLoader(SVGLoader, "basic-lines.svg");
+
+  const shapes = React.useMemo(
+    () =>
+      paths.flatMap((p) =>
+        p.toShapes(true).map((shape) =>
+          //@ts-expect-error this issue has been raised https://github.com/mrdoob/three.js/pull/21059
+          ({ shape, color: p.color, fillOpacity: p.userData.style.fillOpacity })
+        )
+      ),
+    [paths]
+  );
+
+  React.useEffect(() => {
+    const box = new THREE.Box3().setFromObject(ref.current);
+    const sphere = new THREE.Sphere();
+    box.getBoundingSphere(sphere);
+    setCenter((vec) => vec.set(-sphere.center.x, -sphere.center.y, 0));
+  }, []);
+
+  return (
+    <group position={center} ref={ref}>
+      {shapes.map((props) => (
+        //@ts-expect-error this issue has been raised https://github.com/mrdoob/three.js/pull/21058
+        <Cell key={props.shape.uuid} {...props} />
+      ))}
+    </group>
+  );
+}
 
 function Ball(props: any) {
   const [ref, api] = useSphere(() => ({
@@ -215,6 +262,26 @@ function App() {
     </main>
   );
 }
+
+// function App() {
+//   return (
+//     <main>
+//       <h1>PutPutPutty</h1>
+//       <div className="canvas-container">
+//         <Canvas
+//           orthographic
+//           camera={{ position: [0, 0, 50], zoom: 10, up: [0, 0, 1], far: 10000 }}
+//         >
+//           <color attach="background" args={[243, 243, 243]} />
+//           <React.Suspense fallback={null}>
+//             <Svg />
+//           </React.Suspense>
+//           <MapControls />
+//         </Canvas>
+//       </div>
+//     </main>
+//   );
+// }
 
 export default App;
 
